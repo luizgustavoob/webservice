@@ -28,10 +28,6 @@ public class SincronizacaoAutomatica {
 		this.dao = dao;
 	}
 	
-	public IFirebaseDao getDao() {
-		return dao;
-	}
-
 	private static final String TIME_ZONE = "America/Sao_Paulo";
 
 	@Scheduled(cron = "0 0 1 * * *", zone = TIME_ZONE) //Sempre 1 da manhã 
@@ -41,8 +37,8 @@ public class SincronizacaoAutomatica {
 			URL url = new URL(Constantes.LINK_FIREBASE);
 			HttpURLConnection conexao = (HttpURLConnection) url
 					.openConnection();
-			conexao.setReadTimeout(30000);
-			conexao.setConnectTimeout(30000);
+			conexao.setReadTimeout(15000);
+			conexao.setConnectTimeout(15000);
 			conexao.setRequestProperty("Authorization", Constantes.KEY_FIREBASE);
 			conexao.setRequestProperty("Content-Type", "application/json");
 			conexao.setRequestProperty("Method", "POST");		
