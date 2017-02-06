@@ -60,7 +60,7 @@ create table if not exists registro_deletado(
 );
 
 create table if not exists firebase (	
-	token varchar(100) not null,
+	token varchar(1000) not null,
 	constraint pk_token primary key (token)
 );
 
