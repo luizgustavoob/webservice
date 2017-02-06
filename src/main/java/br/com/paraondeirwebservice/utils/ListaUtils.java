@@ -1,4 +1,4 @@
-package br.com.webservice.paraondeir.utils;
+package br.com.paraondeirwebservice.utils;
 
 import java.util.ArrayList;
 import java.util.List;

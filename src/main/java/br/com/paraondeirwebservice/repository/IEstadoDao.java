@@ -1,7 +1,8 @@
-package br.com.webservice.paraondeir.repository;
+package br.com.paraondeirwebservice.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import br.com.webservice.paraondeir.model.Estado;
+
+import br.com.paraondeirwebservice.model.Estado;
 
 public interface IEstadoDao extends JpaRepository<Estado, Integer> {
 

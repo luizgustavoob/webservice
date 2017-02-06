@@ -1,4 +1,4 @@
-package br.com.webservice.paraondeir;
+package br.com.paraondeirwebservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

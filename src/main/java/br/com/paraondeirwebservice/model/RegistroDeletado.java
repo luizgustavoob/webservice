@@ -1,4 +1,4 @@
-package br.com.webservice.paraondeir.model;
+package br.com.paraondeirwebservice.model;
 
 import java.io.Serializable;
 import java.util.Calendar;

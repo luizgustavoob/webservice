@@ -52,11 +52,16 @@ create table if not exists avaliacao (
 	constraint fk_avaliacao_estabelecimento foreign key (idestabelecimento) references estabelecimento(idestabelecimento)
 );
 
-create table registro_deletado(
+create table if not exists registro_deletado(
   nome_tabela varchar(50) not null,
   id_tabela integer not null,
   data_exclusao timestamp not null,
   constraint pk_registro_deletado primary key (nome_tabela, id_tabela)
+);
+
+create table if not exists firebase (	
+	token varchar(100) not null,
+	constraint pk_token primary key (token)
 );
 
 commit;

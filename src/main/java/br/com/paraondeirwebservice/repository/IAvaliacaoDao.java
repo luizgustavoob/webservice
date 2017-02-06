@@ -1,4 +1,4 @@
-package br.com.webservice.paraondeir.repository;
+package br.com.paraondeirwebservice.repository;
 
 import java.util.List;
 
@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import br.com.webservice.paraondeir.model.Avaliacao;
+import br.com.paraondeirwebservice.model.Avaliacao;
 
 public interface IAvaliacaoDao extends JpaRepository<Avaliacao, Integer> {
 	
