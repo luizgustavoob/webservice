@@ -21,22 +21,17 @@ import br.com.paraondeirwebservice.utils.Constantes;
 @EnableScheduling	
 public class SincronizacaoAutomatica {
 
-	private IFirebaseDao dao;
-	
 	@Autowired
-	public void setDao(IFirebaseDao dao) {
-		this.dao = dao;
-	}
+	private IFirebaseDao fbDao;
 	
 	private static final String TIME_ZONE = "America/Sao_Paulo";
 
 	@Scheduled(cron = "0 0 1 * * *", zone = TIME_ZONE) //Sempre 1 da manhã 
-	public void sincronizar() {
+	public void solicitarSincronizacao() throws Exception {
 		String jsonEnvio = "";
 		try {
 			URL url = new URL(Constantes.LINK_FIREBASE);
-			HttpURLConnection conexao = (HttpURLConnection) url
-					.openConnection();
+			HttpURLConnection conexao = (HttpURLConnection) url.openConnection();
 			conexao.setReadTimeout(15000);
 			conexao.setConnectTimeout(15000);
 			conexao.setRequestProperty("Authorization", Constantes.KEY_FIREBASE);
@@ -53,6 +48,7 @@ public class SincronizacaoAutomatica {
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
+			throw new Exception(ex.getMessage());
 		}		
 	}
 	
@@ -60,21 +56,19 @@ public class SincronizacaoAutomatica {
 		JSONStringer builder = new JSONStringer();
 		try {
 			JSONArray array = new JSONArray();
-			List<Firebase> tokens = dao.findAll();
+			List<Firebase> tokens = fbDao.findAll();
 			for (int i = 0; i < tokens.size(); i++) {
 				array.put(tokens.get(i).getToken());
 			}			
 			
 			builder.object();
-			builder.key("registration_id").value(array.toString());
+			builder.key("registration_ids").value(array.toString());
 			builder.key("data").value("sincronizar");
 			builder.endObject();
+			return builder.toString();
 		} catch (JSONException e) {
 			e.printStackTrace();
 			return "";
 		}
-		return builder.toString();
 	}
-
-	
 }

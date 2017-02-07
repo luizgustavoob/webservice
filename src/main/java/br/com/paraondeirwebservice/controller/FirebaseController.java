@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.paraondeirwebservice.model.Firebase;
 import br.com.paraondeirwebservice.repository.IFirebaseDao;
+import br.com.paraondeirwebservice.sinc.SincronizacaoAutomatica;
 
 @RestController
 @RequestMapping(value = "/token")
@@ -21,10 +22,8 @@ public class FirebaseController {
 	
 	@RequestMapping(value = "/", method = RequestMethod.POST, produces = "application/json")
 	public String sincronizarToken(@RequestBody String jsonToken){
-		String response = "";
-		JSONObject json;
 		try {
-			json = new JSONObject(jsonToken);
+			JSONObject json = new JSONObject(jsonToken);
 			String token = json.getString("token");
 			Firebase firebase = new Firebase(token);
 			dao.save(firebase);
@@ -33,11 +32,26 @@ public class FirebaseController {
             builder.object();
             builder.key("token").value(token);
             builder.endObject();
-			response = builder.toString();
+			return builder.toString();
 		} catch (JSONException e) {
 			e.printStackTrace();
-			response = "";
+			return "";
 		}		
-		return response;
+	}
+	
+	@RequestMapping(value = "/notificar", method = RequestMethod.GET)
+	public String notificarSincronizacao() {
+		try {
+			SincronizacaoAutomatica sinc = new SincronizacaoAutomatica();
+			sinc.solicitarSincronizacao();
+			JSONStringer builder = new JSONStringer();
+			builder.object();
+			builder.key("success").value("ok");
+			builder.endObject();
+			return builder.toString();
+		} catch (Exception ex){
+			ex.printStackTrace();			
+			return "error: " + ex.getMessage();
+		}
 	}
 }

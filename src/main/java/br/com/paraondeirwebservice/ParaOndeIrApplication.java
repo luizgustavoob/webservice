@@ -14,7 +14,10 @@ public class ParaOndeIrApplication extends SpringBootServletInitializer {
 	
 	@Override
 	protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+		// Indica quais as classes são responsáveis pela configuração do projeto.
+		// É passado como parâmetro a própria classe já que, devido a anotação @SpringBootApplication, 
+		// definimos que todas as classes, a partir do pacote onde esta está declarada, devem ser scaneadas.
 		return application.sources(ParaOndeIrApplication.class);
+		
 	}
-
 }
