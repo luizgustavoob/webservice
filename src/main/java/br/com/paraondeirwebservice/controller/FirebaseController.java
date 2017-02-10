@@ -2,7 +2,7 @@ package br.com.paraondeirwebservice.controller;
 
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
@@ -22,7 +22,7 @@ import br.com.paraondeirwebservice.repository.IFirebaseDao;
 import br.com.paraondeirwebservice.utils.Constantes;
 
 @RestController
-@RequestMapping(value = "/token")
+@RequestMapping(value = "/firebase")
 public class FirebaseController {
 	
 	@Autowired
@@ -51,14 +51,19 @@ public class FirebaseController {
 	public String notificarSincronizacao() {
 		try {
 			String jsonEnvio = "";
+			
 			URL url = new URL(Constantes.LINK_FIREBASE);
 			HttpURLConnection conexao = (HttpURLConnection) url.openConnection();
+			
+			conexao.setUseCaches(false);
+			conexao.setDoInput(true);
+			conexao.setDoOutput(true);
 			conexao.setReadTimeout(30000);
 			conexao.setConnectTimeout(30000);
+			
+			conexao.setRequestMethod("POST");
 			conexao.setRequestProperty("Authorization", Constantes.KEY_FIREBASE);
-			conexao.setRequestProperty("Content-Type", "application/json");
-			conexao.setRequestProperty("Method", "POST");		
-			conexao.setDoOutput(true);
+			conexao.setRequestProperty("Content-Type", "application/json");					
 			
 			JSONArray array = new JSONArray();
 			List<Firebase> tokens = dao.findAll();
@@ -66,29 +71,26 @@ public class FirebaseController {
 				array.put(tokens.get(i).getToken());
 			}			
 			
-			JSONStringer builder = new JSONStringer();
-			builder.object();
-			builder.key("registration_ids").value(array.toString());
-			builder.key("data").value(
-					new JSONStringer().object().key("sincronizar").value("sincronizar").endObject().toString());
-			builder.endObject();
+			JSONObject data = new JSONObject();
+			data.put("sincronizar", "sincronizar");
+			JSONObject json = new JSONObject();
+			json.put("registration_ids", array);
+			json.put("data", data);
 			
-			jsonEnvio = builder.toString();
+			jsonEnvio = json.toString();
 			if (jsonEnvio != "") {
-				OutputStream os = conexao.getOutputStream();
-				os.write(jsonEnvio.getBytes("UTF-8"));
-				os.close();
-				conexao.connect();		
-				if (conexao.getResponseCode() == HttpURLConnection.HTTP_OK) {
-					InputStream stream = conexao.getInputStream();
-					if (stream != null){
-						ObjectInputStream ois = new ObjectInputStream(stream);
-						Object obj = ois.readObject();						
-					}
+				OutputStreamWriter wr = new OutputStreamWriter(conexao.getOutputStream());
+				wr.write(jsonEnvio);
+				wr.flush();
+				InputStream is = conexao.getInputStream();
+				if (is != null) {
+					ObjectInputStream ois = new ObjectInputStream(is);					
+					JSONObject jsonRetorno = (JSONObject) ois.readObject();
+					return jsonRetorno.toString();
 				}
 			}
 		} catch (Exception ex){
-			ex.printStackTrace();			
+			ex.printStackTrace();
 			return "error: " + ex.getMessage();
 		}
 		return "";
