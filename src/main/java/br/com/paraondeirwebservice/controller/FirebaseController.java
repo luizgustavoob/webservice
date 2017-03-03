@@ -1,5 +1,7 @@
 package br.com.paraondeirwebservice.controller;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -45,8 +47,9 @@ public class FirebaseController {
 		}		
 	}
 	
-	@RequestMapping(value = "/notificar", method = RequestMethod.GET)
-	public void notificarSincronizacao() {
+	@RequestMapping(value = "/notificar", method = RequestMethod.GET, produces = "application/json")
+	public String notificarSincronizacao() {
+		String retorno = "";
 		try {
 			URL url = new URL(Constantes.LINK_FIREBASE);
 			HttpURLConnection conexao = (HttpURLConnection) url.openConnection();
@@ -78,10 +81,19 @@ public class FirebaseController {
 				OutputStreamWriter wr = new OutputStreamWriter(conexao.getOutputStream());
 				wr.write(jsonEnvio);
 				wr.flush();
-				conexao.getInputStream();
+				InputStreamReader isr = new InputStreamReader(conexao.getInputStream());
+				BufferedReader br = new BufferedReader(isr);
+				retorno = br.readLine();
+				while (retorno != null){
+					retorno = br.readLine();
+				}
+				br.close();
+				return retorno;
 			}
 		} catch (Exception ex){
 			ex.printStackTrace();
+			return "erro: " + ex.getMessage();
 		}
+		return retorno;
 	}
 }

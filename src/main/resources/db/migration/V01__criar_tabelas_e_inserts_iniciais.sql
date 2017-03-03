@@ -44,11 +44,14 @@ create table if not exists estabelecimento (
 	constraint fk_estabelecimento_endereco foreign key (idend) references endereco (idend)
 );
 
+create sequence avaliacao_id start 1 increment 1;
+
 create table if not exists avaliacao (	
+	avaliacaoid integer not null default nextval('avaliacao_id'),
+	usuario varchar(100) not null,
 	idestabelecimento integer not null,
 	gostou varchar(1) not null,
-	usuario varchar(100) not null,
-	constraint pk_avaliacao primary key (idestabelecimento, usuario),
+	constraint pk_avaliacao primary key (avaliacaoid),
 	constraint fk_avaliacao_estabelecimento foreign key (idestabelecimento) references estabelecimento(idestabelecimento)
 );
 

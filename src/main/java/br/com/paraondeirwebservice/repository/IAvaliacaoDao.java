@@ -10,12 +10,12 @@ import br.com.paraondeirwebservice.model.Avaliacao;
 
 public interface IAvaliacaoDao extends JpaRepository<Avaliacao, Integer> {
 	
-	@Query(value = "SELECT COUNT(IDAVALIACAO) "
+	@Query(value = "SELECT COUNT(AVALIACAOID) "
 				  + " FROM AVALIACAO A "
 				  + "WHERE A.IDESTABELECIMENTO IN :idestabelecimento", nativeQuery = true)
 	int countAvaliacoesByEstabelecimentos(@Param("idestabelecimento") List<Integer> idsEstabelecimento);
 
-	@Query(value = "SELECT COUNT(IDAVALIACAO) "
+	@Query(value = "SELECT COUNT(AVALIACAOID) "
 			      + " FROM AVALIACAO A"
 			      + " WHERE A.IDESTABELECIMENTO IN :idsestabelecimento "
 			      + "   AND A.GOSTOU = :gostou", nativeQuery = true)

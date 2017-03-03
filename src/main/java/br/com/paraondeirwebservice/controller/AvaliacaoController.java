@@ -17,27 +17,28 @@ import com.google.gson.reflect.TypeToken;
 @RestController
 @RequestMapping(value = "/avaliacao")
 public class AvaliacaoController {
-	
+
 	@Autowired
 	private IAvaliacaoDao avaliacaoDao;
-	
+
 	/**
 	 * Salva as avaliações enviadas e as retorna para o app.
+	 * 
 	 * @return json avaliações.
 	 */
 	@RequestMapping(value = "/sincronizaAvaliacao", method = RequestMethod.POST, produces = "application/json")
-	public String sincronizarAvaliacoes(@RequestBody String jsonAvaliacao){
+	public String sincronizarAvaliacoes(@RequestBody String jsonAvaliacao) {
 		String response = "";
 		List<Avaliacao> lista = new Gson().fromJson(jsonAvaliacao, new TypeToken<List<Avaliacao>>(){}.getType());
 		try {
 			for (Avaliacao avaliacao : lista) {
-				avaliacaoDao.save(avaliacao);				
-			}			
+				avaliacaoDao.save(avaliacao);
+			}
 			response = jsonAvaliacao;
-		} catch (Exception ex){
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		
+
 		return response;
 	}
 }
