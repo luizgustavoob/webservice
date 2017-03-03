@@ -32,6 +32,18 @@ public class AvaliacaoController {
 		List<Avaliacao> lista = new Gson().fromJson(jsonAvaliacao, new TypeToken<List<Avaliacao>>(){}.getType());
 		try {
 			for (Avaliacao avaliacao : lista) {
+				int idTemp;
+				try {
+					idTemp = avaliacaoDao.findIdAvaliacaoByUsuarioAndIdEstabelecimento(
+							avaliacao.getUsuario(), avaliacao.getEstabelecimento().getIdEstabelecimento());
+				} catch (Exception ex){
+					idTemp = 0;
+				}
+				
+				if (idTemp > 0) {
+					avaliacao.setAvaliacaoid(idTemp);					
+				}
+				
 				avaliacaoDao.save(avaliacao);
 			}
 			response = jsonAvaliacao;

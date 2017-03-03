@@ -21,4 +21,11 @@ public interface IAvaliacaoDao extends JpaRepository<Avaliacao, Integer> {
 			      + "   AND A.GOSTOU = :gostou", nativeQuery = true)
 	int countAvaliacoesByEstabelecimentosAndGostou(
 			@Param("idsestabelecimento") List<Integer> idsEstabelecimento, @Param("gostou") String gostou);
+	
+	@Query(value = "SELECT A.AVALIACAOID"
+			      + " FROM AVALIACAO A"
+			      + " WHERE A.USUARIO = :usuario"
+			      + "   AND A.IDESTABELECIMENTO = :idestabelecimento", nativeQuery = true)
+	int findIdAvaliacaoByUsuarioAndIdEstabelecimento(@Param("usuario") String usuario, 
+			@Param("idestabelecimento") int idEstabelecimento);
 }
