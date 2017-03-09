@@ -9,23 +9,31 @@ import org.springframework.data.repository.query.Param;
 import br.com.paraondeirwebservice.model.Avaliacao;
 
 public interface IAvaliacaoDao extends JpaRepository<Avaliacao, Integer> {
-	
-	@Query(value = "SELECT COUNT(AVALIACAOID) "
-				  + " FROM AVALIACAO A "
-				  + "WHERE A.IDESTABELECIMENTO IN :idestabelecimento", nativeQuery = true)
-	int countAvaliacoesByEstabelecimentos(@Param("idestabelecimento") List<Integer> idsEstabelecimento);
 
-	@Query(value = "SELECT COUNT(AVALIACAOID) "
-			      + " FROM AVALIACAO A"
-			      + " WHERE A.IDESTABELECIMENTO IN :idsestabelecimento "
-			      + "   AND A.GOSTOU = :gostou", nativeQuery = true)
-	int countAvaliacoesByEstabelecimentosAndGostou(
-			@Param("idsestabelecimento") List<Integer> idsEstabelecimento, @Param("gostou") String gostou);
-	
-	@Query(value = "SELECT A.AVALIACAOID"
-			      + " FROM AVALIACAO A"
-			      + " WHERE A.USUARIO = :usuario"
-			      + "   AND A.IDESTABELECIMENTO = :idestabelecimento", nativeQuery = true)
-	int findIdAvaliacaoByUsuarioAndIdEstabelecimento(@Param("usuario") String usuario, 
+	@Query(value = "SELECT DISTINCT USUARIO " 
+				 + "  FROM AVALIACAO "
+				 + " ORDER BY USUARIO", nativeQuery = true)
+	List<String> findUsuarios();
+
+	@Query(value = "SELECT DISTINCT A.IDESTABELECIMENTO "
+				 + "  FROM AVALIACAO A " 
+				 + " WHERE A.USUARIO = :usuario "
+				 + " ORDER BY A.IDESTABELECIMENTO ", nativeQuery = true)
+	List<Integer> findEstabsByUsuario(@Param("usuario") String usuario);
+
+	@Query(value = "SELECT DISTINCT A.IDESTABELECIMENTO "
+				 + "  FROM AVALIACAO A " 
+				 + " WHERE A.USUARIO = :usuario "
+				 + "   AND A.GOSTOU = :gostou " 
+				 + " ORDER BY A.IDESTABELECIMENTO", nativeQuery = true)
+	List<Integer> findEstabsByUsuarioAndGostou(
+			@Param("usuario") String usuario, @Param("gostou") String gostou);
+
+	@Query(value = "SELECT A.AVALIACAOID" 
+				 + "  FROM AVALIACAO A"
+				 + " WHERE A.USUARIO = :usuario"
+				 + "   AND A.IDESTABELECIMENTO = :idestabelecimento", nativeQuery = true)
+	int findIdAvaliacaoByUsuarioAndIdEstabelecimento(
+			@Param("usuario") String usuario,
 			@Param("idestabelecimento") int idEstabelecimento);
 }
