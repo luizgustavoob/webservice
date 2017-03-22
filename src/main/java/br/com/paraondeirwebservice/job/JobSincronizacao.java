@@ -1,4 +1,4 @@
-package br.com.paraondeirwebservice.sinc;
+package br.com.paraondeirwebservice.job;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -9,7 +9,7 @@ import br.com.paraondeirwebservice.controller.FirebaseController;
 
 @Component
 @EnableScheduling	
-public class SincronizacaoAutomatica {
+public class JobSincronizacao {
 
 	@Autowired
 	private FirebaseController controller;
