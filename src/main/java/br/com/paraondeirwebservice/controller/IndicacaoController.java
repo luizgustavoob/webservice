@@ -58,14 +58,13 @@ public class IndicacaoController {
 			listaItemsets = atualizaItemset(listaAuxiliar);
 		} while (listaItemsets.size() != 1);
 
-		// boolean calculaConfianca = usuarioAvaliou(usuario, listaUsuarios) ?
-		// true : false;
-		boolean calculaConfianca = false;
+		boolean calculaConfianca = usuarioAvaliou(usuario, listaUsuarios) ? 
+				true : false;
+		//boolean calculaConfianca = false;
 
 		// Calcula confiança.
-		if (calculaConfianca) {
-			int[] idsEstab = listaItemsets.get(0);
-			List<int[]> listaConfianca = geraItemsetsConfianca(idsEstab.length, idsEstab);
+		if (calculaConfianca) {		
+			List<int[]> listaConfianca = geraItemsetsConfianca(listaItemsets.get(0));
 			List<RegraAssociacao> regras = new ArrayList<>();
 
 			// Percorre a lista com os itemsets gerados pra confiança.
@@ -173,7 +172,7 @@ public class IndicacaoController {
 	private boolean usuarioAvaliou(String usuario, List<String> listaUsuarios) {
 		boolean retorno = false;
 		for (int i = 0; i < listaUsuarios.size(); i++) {
-			if (listaUsuarios.get(i) == usuario) {
+			if (listaUsuarios.get(i).equalsIgnoreCase(usuario)) {
 				retorno = true;
 				break;
 			}
@@ -395,22 +394,69 @@ public class IndicacaoController {
 	}
 
 	/**
-	 * TODO. Divide um determinado array de estabelecimentos em grupos menores,
+	 * Divide um determinado array de estabelecimentos em grupos menores,
 	 * sendo o tamanho mínimo 2.
 	 * 
-	 * @param tamanhoLimite - tamanho máximo dos arrays a serem gerados.
 	 * @param idsEstab - array a dividir.
 	 * 
 	 * @return lista dos arrays gerados.
-	 */
-	private List<int[]> geraItemsetsConfianca(int tamanhoLimite, int[] idsEstab) {
-		/**
-		 * Exemplo: Dado um array [2, 3, 4, 5], gerar os arrays [2, 3], [2, 4],
-		 * [2, 5], [3, 4], [3, 5], [4, 5], [2, 3, 4], [2, 3, 5] e [3, 4, 5].
-		 */
+	 */	
+	private List<int[]> geraItemsetsConfianca(int[] idsEstab) {
 		List<int[]> listaRetorno = new ArrayList<int[]>();
-		addElemento(idsEstab, listaRetorno);
+		
+		int controle = idsEstab.length;		
+		int[] bit = new int[controle];
+		int qtdeItemSets = (int) (Math.pow(2, controle) - 1);
+		
+		for (int i = 0; i < controle; i++){			
+			bit[i] = 0;
+		}
+		
+		String idsConcat = "";
+		
+		for (int j = 1; j <= qtdeItemSets; j++){
+			idsConcat = "";
+			somaBit(bit, controle);
+			for (int k = 0; k < controle; k++){
+				if (bit[k] == 1){
+					if (idsConcat.equals("")){
+						idsConcat = idsConcat + idsEstab[k];
+					} else {
+						idsConcat = idsConcat + "," + idsEstab[k];						
+					}
+				}				
+			}
+			
+			String[] idsString;
+			
+			if (idsConcat.contains(",")) {			
+				idsString = idsConcat.split(",");
+			} else {
+				idsString = new String[1];
+				idsString[0] = idsConcat;
+			}
+			
+			int[] ids = new int[idsString.length];
+			
+			for (int l = 0; l < idsString.length; l++){
+				ids[l] = Integer.parseInt(idsString[l]);
+			}
+			
+			if (ids.length > 1){
+				addElemento(ids, listaRetorno);
+			}
+		}
+		
 		return listaRetorno;
+	}	
+	
+	private void somaBit(int bit[], int tamanho){
+		for (int i = 0; i < tamanho; i++){
+			if (bit[i] == 0){
+				bit[i] = 1;
+				break;
+			}
+			bit[i] = 0;
+		}
 	}
-
 }
