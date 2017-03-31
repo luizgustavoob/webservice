@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.paraondeirwebservice.model.Cidade;
 import br.com.paraondeirwebservice.model.Estabelecimento;
 import br.com.paraondeirwebservice.model.RegraAssociacao;
 import br.com.paraondeirwebservice.repository.IAvaliacaoDao;
@@ -42,13 +41,9 @@ public class IndicacaoController {
 		String usuario = jsonUsuario.getString("usuario");
 
 		// Calcula suporte.
-		List<String> listaUsuarios = avaliacaoDao.findUsuarios();
-
-		List<HashMap<String, String>> listaAvaliacoes = getAvaliacoes(
-				listaUsuarios, false);
-
-		List<HashMap<String, String>> listaAvaliacoesPositivas = getAvaliacoes(
-				listaUsuarios, true);
+		List<String> listaUsuarios = avaliacaoDao.findUsuariosAvaliacao();
+		List<HashMap<String, String>> listaAvaliacoes = getAvaliacoes(listaUsuarios, false);
+		List<HashMap<String, String>> listaAvaliacoesPositivas = getAvaliacoes(listaUsuarios, true);
 
 		List<int[]> listaItemsets = criaItemsetInicial();
 		do {
@@ -58,45 +53,41 @@ public class IndicacaoController {
 			listaItemsets = atualizaItemset(listaAuxiliar);
 		} while (listaItemsets.size() != 1);
 
-		boolean calculaConfianca = usuarioAvaliou(usuario, listaUsuarios) ? 
-				true : false;
-		//boolean calculaConfianca = false;
+		boolean calculaConfianca = usuarioAvaliou(usuario, listaUsuarios) ? true : false;
 
 		// Calcula confiança.
 		if (calculaConfianca) {		
+			double numRegrasPossiveis = 
+					Math.pow(3, listaItemsets.get(0).length) 
+					- (Math.pow(2, listaItemsets.get(0).length + 1)) + 1;
+			
 			List<int[]> listaConfianca = geraItemsetsConfianca(listaItemsets.get(0));
 			List<RegraAssociacao> regras = new ArrayList<>();
-
-			// Percorre a lista com os itemsets gerados pra confiança.
-			for (int i = 0; i < listaConfianca.size(); i++) {
-				int[] ids = listaConfianca.get(i);
-				double numRegrasPossiveis = 
-						Math.pow(3, ids.length) - (Math.pow(2, ids.length + 1)) + 1;
-				int n = 0;
-				while (n <= numRegrasPossiveis) {
+			
+			int n = 0;
+			while (n <= numRegrasPossiveis) {
+				for (int i = 0; i < listaConfianca.size(); i++) {
 					// gerar a regra. PRECISO DE AJUDA AQUI TAMBÉM.
-					int[] se = null;
-					int[] entao = null;
-					RegraAssociacao regra = new RegraAssociacao(se, entao);
-
-					double confianca = 
-							calculaConfianca(regra, listaUsuarios, listaAvaliacoesPositivas);
-					
+					RegraAssociacao regra = new RegraAssociacao(new int[]{}, new int[]{});					
+					double confianca = calculaConfianca(regra, listaUsuarios, 
+							listaAvaliacoesPositivas);					
 					if (confianca >= Constantes.CONFIANCA_MINIMA) {
 						regras.add(regra);
 					}
-					n++;
-				}
-
-				for (int j = 0; j < regras.size(); j++) {
-					RegraAssociacao r = regras.get(j);
-					if (usuarioGostouDoSe(usuario, r.getSe(), listaAvaliacoesPositivas)) {
-						int[] entao = r.getEntao();
-						for (int k = 0; k < entao.length; k++) {
-							int e = entao[k];
-							Estabelecimento estab = estabDao.findOne(e);
-							listaRetorno.add(estab);
-						}
+				}	
+				n++; 
+				//Na verdade, n deverá ser incrementado a cada geração de uma regra 
+				//de associação válida.				
+			}
+			
+			for (int j = 0; j < regras.size(); j++) {
+				RegraAssociacao r = regras.get(j);
+				if (usuarioGostouDoSe(usuario, r.getSe(), listaAvaliacoesPositivas)) {
+					int[] entao = r.getEntao();
+					for (int k = 0; k < entao.length; k++) {
+						int e = entao[k];
+						Estabelecimento estab = estabDao.findOne(e);
+						listaRetorno.add(estab);
 					}
 				}
 			}
@@ -109,19 +100,16 @@ public class IndicacaoController {
 		}
 
 		Gson gson = new Gson();
-		JsonElement element = gson.toJsonTree(listaRetorno,
-				new TypeToken<List<Cidade>>() {}.getType());
+		JsonElement element = gson.toJsonTree(listaRetorno, new TypeToken<List<Estabelecimento>>(){}.getType());
 		return element.getAsJsonArray().toString();
 	}
 
 	/**
 	 * Verifica se os estabelecimentos presentes no parâmetro SE da regra foram
 	 * avaliados positivamente pelo usuário da solicitação.
-	 * 
 	 * @param usuario- usuário da solicitação.
 	 * @param estabSe - estabelecimentos do parâmetro SE da regra.
 	 * @param listaAvaliacoesPositivas - lista de avaliações positivas.
-	 * 
 	 * @return true or false.
 	 */
 	private boolean usuarioGostouDoSe(String usuario, int[] estabSe,
@@ -148,7 +136,6 @@ public class IndicacaoController {
 
 	/**
 	 * TODO. Aplicar o cálculo da confiança.
-	 * 
 	 * @param regra
 	 * @param listaUsuarios
 	 * @param listaAvaliacoesPositivas
@@ -163,10 +150,8 @@ public class IndicacaoController {
 
 	/**
 	 * Verifica se determinado usuário já realizou alguma avaliação.
-	 * 
 	 * @param usuario - usuário da solicitação.
 	 * @param listaUsuarios - lista de usuários que já realizaram avaliações.
-	 * 
 	 * @return avaliou ou não alguma vez.
 	 */
 	private boolean usuarioAvaliou(String usuario, List<String> listaUsuarios) {
@@ -197,12 +182,10 @@ public class IndicacaoController {
 	/**
 	 * Aplica a fórmula do suporte (total de avaliações positivas do(s)
 	 * estabelecimento(s) / total de avaliações do(s) estabelecimento(s).
-	 * 
 	 * @param listaAtualItemset - lista com os itemsets atualizados.
 	 * @param listaUsuarios - utilizados como transações.
 	 * @param listaAvaliacoes - todas as avaliações de cada usuário.
 	 * @param listaAvaliacoesPositivas - todas as avaliações positivas de cada usuário.
-	 * 
 	 * @return lista com os itemsets cujo valor de suporte é maior que o mínimo proposto.
 	 */
 	private List<int[]> calculaSuporte(List<int[]> listaAtualItemset,
@@ -228,11 +211,9 @@ public class IndicacaoController {
 
 	/**
 	 * Retorna todas as avaliações realizadas pelos usuários.
-	 * 
 	 * @param listaUsuarios - usuários que realizaram avaliações.
 	 * @param filtraGostou - Indica se a consulta deve considerar o preenchimento do 
 	 * campo "Gostou".
-	 * 
 	 * @return lista com as avaliações realizadas, separadas por usuário.
 	 */
 	private List<HashMap<String, String>> getAvaliacoes(
@@ -261,11 +242,9 @@ public class IndicacaoController {
 	/**
 	 * Contar as avaliações de um determinado grupo de estabelecimentos
 	 * (itemsets).
-	 * 
 	 * @param idsEstab - estabelecimentos avaliados.
 	 * @param listaUsuarios - usuários que realizaram avaliações.
 	 * @param listaAvaliacoes - lista de avaliações para contagem.
-	 * 
 	 * @return total de avaliações realizadas sobre os estabelecimentos passados 
 	 * por parâmetro.
 	 */
@@ -302,9 +281,7 @@ public class IndicacaoController {
 	/**
 	 * Atualiza a lista de itemsets usadas no cálculo do suporte, incremento o
 	 * tamanho do seus elementos em 1.
-	 * 
 	 * @param listaAtualItemset - lista atual dos itemsets.
-	 * 
 	 * @return lista de itemsets com seus elementos com tamanho n+1.
 	 */
 	private List<int[]> atualizaItemset(List<int[]> listaAtualItemset) {
@@ -350,12 +327,11 @@ public class IndicacaoController {
 	/**
 	 * Verifica se um determinado itemset deve ser adicionado a lista
 	 * atualizada.
-	 * 
 	 * @param novoArray - array candidato.
 	 * @param listaProcura - lista atual.
 	 */
 	private void addElemento(int[] novoArray, List<int[]> listaProcura) {
-		if (listaProcura.size() > 0) {
+		if (listaProcura.size() > 0) {			
 			for (int p = 0; p < listaProcura.size(); p++) {
 				int[] arrayBase = listaProcura.get(p);
 				if (!temNoArray(novoArray, arrayBase)) {
@@ -373,10 +349,8 @@ public class IndicacaoController {
 	/**
 	 * Verifica se determinados elementos já fazem parte de um determinado
 	 * array.
-	 * 
 	 * @param elementos - estabelecimentos candidatos.
 	 * @param arrayProcura - array base para verificação dos elementos.
-	 * 
 	 * @return elementos existem ou não no array.
 	 */
 	private boolean temNoArray(int[] elementos, int[] arrayProcura) {
@@ -396,9 +370,7 @@ public class IndicacaoController {
 	/**
 	 * Divide um determinado array de estabelecimentos em grupos menores,
 	 * sendo o tamanho mínimo 2.
-	 * 
 	 * @param idsEstab - array a dividir.
-	 * 
 	 * @return lista dos arrays gerados.
 	 */	
 	private List<int[]> geraItemsetsConfianca(int[] idsEstab) {
@@ -412,37 +384,21 @@ public class IndicacaoController {
 			bit[i] = 0;
 		}
 		
-		String idsConcat = "";
-		
 		for (int j = 1; j <= qtdeItemSets; j++){
-			idsConcat = "";
+			List<Integer> listIds = new ArrayList<>();			
 			somaBit(bit, controle);
+			
 			for (int k = 0; k < controle; k++){
-				if (bit[k] == 1){
-					if (idsConcat.equals("")){
-						idsConcat = idsConcat + idsEstab[k];
-					} else {
-						idsConcat = idsConcat + "," + idsEstab[k];						
-					}
+				if (bit[k] == 1){	
+					listIds.add(idsEstab[k]);
 				}				
-			}
+			}	
 			
-			String[] idsString;
-			
-			if (idsConcat.contains(",")) {			
-				idsString = idsConcat.split(",");
-			} else {
-				idsString = new String[1];
-				idsString[0] = idsConcat;
-			}
-			
-			int[] ids = new int[idsString.length];
-			
-			for (int l = 0; l < idsString.length; l++){
-				ids[l] = Integer.parseInt(idsString[l]);
-			}
-			
-			if (ids.length > 1){
+			if (listIds.size() > 1){
+				int[] ids = new int[listIds.size()];			
+				for (int l = 0; l < listIds.size(); l++){
+					ids[l] = listIds.get(l);
+				}			
 				addElemento(ids, listaRetorno);
 			}
 		}
@@ -450,13 +406,19 @@ public class IndicacaoController {
 		return listaRetorno;
 	}	
 	
-	private void somaBit(int bit[], int tamanho){
+	/**
+	 * Função auxiliar utilizada na divisão de um itemset em arrays menores.
+	 * @see geraItemsetsConfianca
+	 * @param arrayBits
+	 * @param tamanho
+	 */
+	private void somaBit(int arrayBits[], int tamanho){
 		for (int i = 0; i < tamanho; i++){
-			if (bit[i] == 0){
-				bit[i] = 1;
+			if (arrayBits[i] == 0){
+				arrayBits[i] = 1;
 				break;
 			}
-			bit[i] = 0;
+			arrayBits[i] = 0;
 		}
 	}
 }
