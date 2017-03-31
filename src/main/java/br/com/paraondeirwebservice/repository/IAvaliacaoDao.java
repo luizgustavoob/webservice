@@ -13,7 +13,7 @@ public interface IAvaliacaoDao extends JpaRepository<Avaliacao, Integer> {
 	@Query(value = "SELECT DISTINCT USUARIO " 
 				 + "  FROM AVALIACAO "
 				 + " ORDER BY USUARIO", nativeQuery = true)
-	List<String> findUsuarios();
+	List<String> findUsuariosAvaliacao();
 
 	@Query(value = "SELECT DISTINCT A.IDESTABELECIMENTO "
 				 + "  FROM AVALIACAO A " 
