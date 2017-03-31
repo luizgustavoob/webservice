@@ -8,29 +8,41 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "firebase")
-public class Firebase implements Serializable {
+@Table(name = "usuario")
+public class Usuario implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@Column(name = "token")
-	private String token;
-
-	public Firebase(){
+	@Column(name = "usuario")
+	private String usuario;
+	
+	@Column(name = "fcmid")
+	private String fcmid;
+	
+	public Usuario(){
 		super();
 	}
 	
-	public Firebase(String token){
+	public Usuario(String usuario, String fcmid){
 		super();
-		this.token = token;
+		this.usuario = usuario;
+		this.fcmid = fcmid;
 	}
 	
-	public String getToken() {
-		return token;
+	public String getUsuario() {
+		return usuario;
 	}
 
-	public void setToken(String token) {
-		this.token = token;
+	public void setUsuario(String usuario) {
+		this.usuario = usuario;
+	}
+
+	public String getFcmid() {
+		return fcmid;
+	}
+
+	public void setFcmid(String fcmid) {
+		this.fcmid = fcmid;
 	}
 }

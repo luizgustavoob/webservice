@@ -1,8 +1,9 @@
 package br.com.paraondeirwebservice.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import br.com.paraondeirwebservice.model.Firebase;
+import br.com.paraondeirwebservice.model.Usuario;
 
-public interface IFirebaseDao extends JpaRepository<Firebase, String> {
-
+public interface IUsuarioDao extends JpaRepository<Usuario, String> {
+	
+	Usuario findByfcmid(String fcmid);
 }

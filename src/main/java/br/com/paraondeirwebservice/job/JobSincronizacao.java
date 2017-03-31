@@ -5,14 +5,14 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import br.com.paraondeirwebservice.controller.FirebaseController;
+import br.com.paraondeirwebservice.controller.NotificacaoController;
 
 @Component
 @EnableScheduling	
 public class JobSincronizacao {
 
 	@Autowired
-	private FirebaseController controller;
+	private NotificacaoController controller;
 	
 	private static final String TIME_ZONE = "America/Sao_Paulo";
 
