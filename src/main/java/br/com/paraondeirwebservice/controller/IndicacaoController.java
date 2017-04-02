@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.paraondeirwebservice.model.Estabelecimento;
 import br.com.paraondeirwebservice.model.RegraAssociacao;
+import br.com.paraondeirwebservice.model.Usuario;
 import br.com.paraondeirwebservice.repository.IAvaliacaoDao;
 import br.com.paraondeirwebservice.repository.IEstabelecimentoDao;
 import br.com.paraondeirwebservice.utils.Constantes;
@@ -37,8 +37,7 @@ public class IndicacaoController {
 			throws JSONException {
 		List<Estabelecimento> listaRetorno = new ArrayList<>();
 
-		JSONObject jsonUsuario = new JSONObject(json);
-		String usuario = jsonUsuario.getString("usuario");
+		Usuario usuario = new Gson().fromJson(json, new TypeToken<Usuario>(){}.getType());
 
 		// Calcula suporte.
 		List<String> listaUsuarios = avaliacaoDao.findUsuariosAvaliacao();
@@ -53,7 +52,7 @@ public class IndicacaoController {
 			listaItemsets = atualizaItemset(listaAuxiliar);
 		} while (listaItemsets.size() != 1);
 
-		boolean calculaConfianca = usuarioAvaliou(usuario, listaUsuarios) ? true : false;
+		boolean calculaConfianca = usuarioAvaliou(usuario.getUsuario(), listaUsuarios) ? true : false;
 
 		// Calcula confiança.
 		if (calculaConfianca) {		
@@ -81,7 +80,7 @@ public class IndicacaoController {
 			
 			for (int j = 0; j < regras.size(); j++) {
 				RegraAssociacao r = regras.get(j);
-				if (usuarioGostouDoSe(usuario, r.getSe(), listaAvaliacoesPositivas)) {
+				if (usuarioGostouDoSe(usuario.getUsuario(), r.getSe(), listaAvaliacoesPositivas)) {
 					List<Integer> entao = r.getEntao();
 					for (int k = 0; k < entao.size(); k++) {
 						int e = entao.get(k);
