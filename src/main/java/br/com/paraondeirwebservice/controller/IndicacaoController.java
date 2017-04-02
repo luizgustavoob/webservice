@@ -26,7 +26,7 @@ import com.google.gson.reflect.TypeToken;
 @RestController
 @RequestMapping(value = "/indicacao")
 public class IndicacaoController {
-
+	
 	@Autowired
 	private IAvaliacaoDao avaliacaoDao;
 	@Autowired
@@ -63,29 +63,28 @@ public class IndicacaoController {
 			
 			List<int[]> listaConfianca = geraItemsetsConfianca(listaItemsets.get(0));
 			List<RegraAssociacao> regras = new ArrayList<>();
-			
-			int n = 0;
-			while (n <= numRegrasPossiveis) {
+			while (regras.size() != numRegrasPossiveis) {
 				for (int i = 0; i < listaConfianca.size(); i++) {
-					// gerar a regra. PRECISO DE AJUDA AQUI TAMBÉM.
-					RegraAssociacao regra = new RegraAssociacao(new int[]{}, new int[]{});					
+					// gerar a regra. 
+					int[] idsParaRegra = listaConfianca.get(i); // [1,2]
+					double numRegrasItemsetMenor = Math.pow(2, idsParaRegra.length) - 2; // 2 regras
+					int k = 0;
+					k++;
+					RegraAssociacao regra = geraRegraDeAssociacao(idsParaRegra);					
 					double confianca = calculaConfianca(regra, listaUsuarios, 
 							listaAvaliacoesPositivas);					
 					if (confianca >= Constantes.CONFIANCA_MINIMA) {
 						regras.add(regra);
 					}
 				}	
-				n++; 
-				//Na verdade, n deverá ser incrementado a cada geração de uma regra 
-				//de associação válida.				
 			}
 			
 			for (int j = 0; j < regras.size(); j++) {
 				RegraAssociacao r = regras.get(j);
 				if (usuarioGostouDoSe(usuario, r.getSe(), listaAvaliacoesPositivas)) {
-					int[] entao = r.getEntao();
-					for (int k = 0; k < entao.length; k++) {
-						int e = entao[k];
+					List<Integer> entao = r.getEntao();
+					for (int k = 0; k < entao.size(); k++) {
+						int e = entao.get(k);
 						Estabelecimento estab = estabDao.findOne(e);
 						listaRetorno.add(estab);
 					}
@@ -112,7 +111,7 @@ public class IndicacaoController {
 	 * @param listaAvaliacoesPositivas - lista de avaliações positivas.
 	 * @return true or false.
 	 */
-	private boolean usuarioGostouDoSe(String usuario, int[] estabSe,
+	private boolean usuarioGostouDoSe(String usuario, List<Integer> estabSe,
 			List<HashMap<String, String>> listaAvaliacoesPositivas) {
 		int count = 0;
 
@@ -120,9 +119,9 @@ public class IndicacaoController {
 			String ids = listaAvaliacoesPositivas.get(i).get(usuario);
 			if (ids != null) {
 				String[] idsArray = ids.split(",");
-				for (int j = 0; j < estabSe.length; j++) {
+				for (int j = 0; j < estabSe.size(); j++) {
 					for (int k = 0; k < idsArray.length; k++) {
-						if (estabSe[j] == Integer.parseInt(idsArray[k])) {
+						if (estabSe.get(j) == Integer.parseInt(idsArray[k])) {
 							count++;
 						}
 					}
@@ -131,7 +130,7 @@ public class IndicacaoController {
 			}
 		}
 
-		return count == estabSe.length ? true : false;
+		return count == estabSe.size() ? true : false;
 	}
 
 	/**
@@ -372,9 +371,20 @@ public class IndicacaoController {
 	 * sendo o tamanho mínimo 2.
 	 * @param idsEstab - array a dividir.
 	 * @return lista dos arrays gerados.
+	 * @throws JSONException 
 	 */	
+	@RequestMapping(value = "/teste", method = RequestMethod.POST, produces = "application/json")
 	private List<int[]> geraItemsetsConfianca(int[] idsEstab) {
+	//private String geraItemsetsConfianca(@RequestBody String json) throws JSONException {
 		List<int[]> listaRetorno = new ArrayList<int[]>();
+		
+		/*JSONObject jsonObject = new JSONObject(json);
+		String idString = jsonObject.getString("array");
+		String[] idsString = idString.split(",");
+		int[] idsEstab = new int[idsString.length];
+		for(int p = 0; p < idsString.length; p++){
+			idsEstab[p] = Integer.parseInt(idsString[p]);
+		}*/
 		
 		int controle = idsEstab.length;		
 		int[] bit = new int[controle];
@@ -404,6 +414,13 @@ public class IndicacaoController {
 		}
 		
 		return listaRetorno;
+		/*JSONObject jsonRetorno = new JSONObject();
+		JSONArray jsonArray = new JSONArray();
+		for (int m = 0; m < listaRetorno.size(); m++){
+			jsonArray.put(listaRetorno.get(m));
+		}
+		jsonRetorno.put("estabs", jsonArray.toString());
+		return jsonRetorno.toString();*/
 	}	
 	
 	/**
@@ -420,5 +437,9 @@ public class IndicacaoController {
 			}
 			arrayBits[i] = 0;
 		}
+	}
+
+	private RegraAssociacao geraRegraDeAssociacao(int[] idsParaRegra) {
+		return null;		
 	}
 }

@@ -1,5 +1,7 @@
 package br.com.paraondeirwebservice.controller;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +45,11 @@ public class AvaliacaoController {
 				if (idTemp > 0) {
 					avaliacao.setAvaliacaoid(idTemp);					
 				}
+				
+				SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+				Calendar calendar = Calendar.getInstance();
+				calendar.setTime(formato.parse(avaliacao.getData()));
+				avaliacao.setDtAvaliacao(calendar);
 				
 				avaliacaoDao.save(avaliacao);
 			}

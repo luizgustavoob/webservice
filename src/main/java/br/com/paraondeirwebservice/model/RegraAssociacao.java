@@ -1,31 +1,34 @@
 package br.com.paraondeirwebservice.model;
 
+import java.util.List;
+
 public class RegraAssociacao {
 
-	private int[] se;
-	private int[] entao;
+	private List<Integer> se;
+	private List<Integer> entao;
 	
 	public RegraAssociacao(){
 	}
 	
-	public RegraAssociacao(int[] se, int[] entao){
-		this.se = se;
-		this.entao = entao;
-	}
-	
-	public int[] getSe() {
+	public List<Integer> getSe() {
 		return se;
 	}
 	
-	public void setSe(int[] se) {
+	public void setSe(List<Integer> se) {
 		this.se = se;
 	}
 	
-	public int[] getEntao() {
+	public List<Integer> getEntao() {
 		return entao;
 	}
 	
-	public void setEntao(int[] entao) {
+	public void setEntao(List<Integer> entao) {
 		this.entao = entao;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		// TODO Auto-generated method stub
+		return super.equals(obj);
 	}
 }

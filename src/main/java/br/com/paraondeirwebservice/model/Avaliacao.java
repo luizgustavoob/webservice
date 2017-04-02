@@ -1,6 +1,7 @@
 package br.com.paraondeirwebservice.model;
 
 import java.io.Serializable;
+import java.util.Calendar;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -12,6 +13,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 @Entity
 @Table(name = "avaliacao")
@@ -34,7 +36,12 @@ public class Avaliacao implements Serializable {
 	
 	@Column(name = "gostou", nullable = false)
 	private String gostou;
-
+	
+	@Transient
+	private String data;
+	
+	@Column(name = "dtavaliacao", columnDefinition = "timestamp")
+	private Calendar dtAvaliacao;
 
 	public int getAvaliacaoid() {
 		return avaliacaoid;
@@ -66,5 +73,21 @@ public class Avaliacao implements Serializable {
 
 	public void setGostou(String gostou) {
 		this.gostou = gostou;
+	}
+	
+	public String getData() {
+		return data;
+	}
+
+	public void setData(String data) {
+		this.data = data;
+	}
+
+	public Calendar getDtAvaliacao() {
+		return dtAvaliacao;
+	}
+
+	public void setDtAvaliacao(Calendar dtAvaliacao) {
+		this.dtAvaliacao = dtAvaliacao;
 	}
 }
