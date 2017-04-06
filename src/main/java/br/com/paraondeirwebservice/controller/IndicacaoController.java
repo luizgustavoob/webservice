@@ -3,7 +3,10 @@ package br.com.paraondeirwebservice.controller;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,10 +39,8 @@ public class IndicacaoController {
 	public String solicitaIndicacao(@RequestBody String json)
 			throws JSONException {
 		List<Estabelecimento> listaRetorno = new ArrayList<>();
-
 		Usuario usuario = new Gson().fromJson(json, new TypeToken<Usuario>(){}.getType());
 
-		// Calcula suporte.
 		List<String> listaUsuarios = avaliacaoDao.findUsuariosAvaliacao();
 		List<HashMap<String, String>> listaAvaliacoes = getAvaliacoes(listaUsuarios, false);
 		List<HashMap<String, String>> listaAvaliacoesPositivas = getAvaliacoes(listaUsuarios, true);
@@ -54,34 +55,25 @@ public class IndicacaoController {
 
 		boolean calculaConfianca = usuarioAvaliou(usuario.getUsuario(), listaUsuarios) ? true : false;
 
-		// Calcula confiança.
 		if (calculaConfianca) {		
-			double numRegrasPossiveis = 
-					Math.pow(3, listaItemsets.get(0).length) 
-					- (Math.pow(2, listaItemsets.get(0).length + 1)) + 1;
-			
 			List<int[]> listaConfianca = geraItemsetsConfianca(listaItemsets.get(0));
-			List<RegraAssociacao> regras = new ArrayList<>();
-			while (regras.size() != numRegrasPossiveis) {
-				for (int i = 0; i < listaConfianca.size(); i++) {
-					// gerar a regra. 
-					int[] idsParaRegra = listaConfianca.get(i); // [1,2]
-					double numRegrasItemsetMenor = Math.pow(2, idsParaRegra.length) - 2; // 2 regras
-					int k = 0;
-					k++;
-					RegraAssociacao regra = geraRegraDeAssociacao(idsParaRegra);					
-					double confianca = calculaConfianca(regra, listaUsuarios, 
-							listaAvaliacoesPositivas);					
+			List<RegraAssociacao> regras = new ArrayList<>();			
+			for (int i = 0; i < listaConfianca.size(); i++) {
+				int[] itemset = listaConfianca.get(i);
+				List<RegraAssociacao> regrasItemset = gerarRegrasDeAssociacao(itemset);
+				for (RegraAssociacao regraAssociacao : regrasItemset) {
+					regraAssociacao.dadosHashToList();
+					double confianca = 0.9; //calculaConfianca(regraAssociacao, listaUsuarios, listaAvaliacoesPositivas);					
 					if (confianca >= Constantes.CONFIANCA_MINIMA) {
-						regras.add(regra);
+						regras.add(regraAssociacao);
 					}
-				}	
-			}
+				}
+			}	
 			
 			for (int j = 0; j < regras.size(); j++) {
 				RegraAssociacao r = regras.get(j);
-				if (usuarioGostouDoSe(usuario.getUsuario(), r.getSe(), listaAvaliacoesPositivas)) {
-					List<Integer> entao = r.getEntao();
+				if (usuarioGostouDoSe(usuario.getUsuario(), r.getListSe(), listaAvaliacoesPositivas)) {
+					List<Integer> entao = r.getListEntao();
 					for (int k = 0; k < entao.size(); k++) {
 						int e = entao.get(k);
 						Estabelecimento estab = estabDao.findOne(e);
@@ -98,7 +90,8 @@ public class IndicacaoController {
 		}
 
 		Gson gson = new Gson();
-		JsonElement element = gson.toJsonTree(listaRetorno, new TypeToken<List<Estabelecimento>>(){}.getType());
+		JsonElement element = gson.toJsonTree(listaRetorno, 
+				new TypeToken<List<Estabelecimento>>(){}.getType());
 		return element.getAsJsonArray().toString();
 	}
 
@@ -370,21 +363,9 @@ public class IndicacaoController {
 	 * sendo o tamanho mínimo 2.
 	 * @param idsEstab - array a dividir.
 	 * @return lista dos arrays gerados.
-	 * @throws JSONException 
-	 */	
-	@RequestMapping(value = "/teste", method = RequestMethod.POST, produces = "application/json")
+	 */		
 	private List<int[]> geraItemsetsConfianca(int[] idsEstab) {
-	//private String geraItemsetsConfianca(@RequestBody String json) throws JSONException {
-		List<int[]> listaRetorno = new ArrayList<int[]>();
-		
-		/*JSONObject jsonObject = new JSONObject(json);
-		String idString = jsonObject.getString("array");
-		String[] idsString = idString.split(",");
-		int[] idsEstab = new int[idsString.length];
-		for(int p = 0; p < idsString.length; p++){
-			idsEstab[p] = Integer.parseInt(idsString[p]);
-		}*/
-		
+		List<int[]> listaRetorno = new ArrayList<int[]>();		
 		int controle = idsEstab.length;		
 		int[] bit = new int[controle];
 		int qtdeItemSets = (int) (Math.pow(2, controle) - 1);
@@ -413,13 +394,6 @@ public class IndicacaoController {
 		}
 		
 		return listaRetorno;
-		/*JSONObject jsonRetorno = new JSONObject();
-		JSONArray jsonArray = new JSONArray();
-		for (int m = 0; m < listaRetorno.size(); m++){
-			jsonArray.put(listaRetorno.get(m));
-		}
-		jsonRetorno.put("estabs", jsonArray.toString());
-		return jsonRetorno.toString();*/
 	}	
 	
 	/**
@@ -438,7 +412,85 @@ public class IndicacaoController {
 		}
 	}
 
-	private RegraAssociacao geraRegraDeAssociacao(int[] idsParaRegra) {
-		return null;		
+	private List<RegraAssociacao> gerarRegrasDeAssociacao(int[] itemset){
+		if (itemset.length >= 2){
+			List<RegraAssociacao> regras = new ArrayList<>();
+			String[] strItemset = new String[itemset.length];
+			for (int i = 0; i < itemset.length; i++){
+				strItemset[i] = itemset[i] + "";
+			}
+			
+			Set<RegraAssociacao> setResultado = new HashSet<>();
+			Set<String> set = new HashSet<>(Arrays.asList(strItemset));
+			Set<RegraAssociacao> setRegras = gerarRegrasDeAssociacao(set);
+			gerarRegrasDeAssociacao(set, setRegras, setResultado);
+			
+			for (RegraAssociacao regraAssociacao : setResultado) {
+				regras.add(regraAssociacao);
+			}
+			
+			return regras;
+		}
+		return null;
 	}
+
+	private Set<RegraAssociacao> gerarRegrasDeAssociacao(Set<String> itemset){	
+		Set<RegraAssociacao> retorno = new HashSet<>(itemset.size());
+		Set<String> se = new HashSet<>(itemset);
+		Set<String> entao = new HashSet<>(1);
+		for (String elemento : itemset) {
+			se.remove(elemento);
+			entao.add(elemento);
+			retorno.add(new RegraAssociacao(se, entao));
+			se.add(elemento);
+			entao.remove(elemento);
+		}
+		return retorno;
+	}
+	
+	private void gerarRegrasDeAssociacao(Set<String> itemset, Set<RegraAssociacao> setRegras,
+			Set<RegraAssociacao> setResultado) {
+		int k = itemset.size();
+		int m = setRegras.iterator().next().getHashSetEntao().size();
+		if (k > m + 1) {
+			Set<RegraAssociacao> novasRegras = moveUmElementoPraCondicaoEntao(setRegras);
+			Iterator<RegraAssociacao> iterator = novasRegras.iterator();
+			while (iterator.hasNext()) {
+				RegraAssociacao regra = iterator.next();
+				setResultado.add(regra);
+			}
+			gerarRegrasDeAssociacao(itemset, novasRegras, setResultado);
+		} else {
+			Iterator<RegraAssociacao> iterator = setRegras.iterator();
+			while (iterator.hasNext()) {
+				RegraAssociacao regra = iterator.next();
+				setResultado.add(regra);
+			}
+		}
+	}
+
+	private Set<RegraAssociacao> moveUmElementoPraCondicaoEntao(Set<RegraAssociacao> setRegras) {
+		Set<RegraAssociacao> output = new HashSet<>();
+		Set<String> se = new HashSet<>();
+		Set<String> entao = new HashSet<>();
+		
+		for (RegraAssociacao regra : setRegras) {
+			se.clear();
+			entao.clear();
+			se.addAll(regra.getHashSetSe());
+			entao.addAll(regra.getHashSetEntao());
+
+			for (String elemento : regra.getHashSetSe()) {
+				se.remove(elemento);
+				entao.add(elemento);
+				RegraAssociacao novaRegra = new RegraAssociacao(se, entao);
+				output.add(novaRegra);
+				se.add(elemento);
+				entao.remove(elemento);
+			}
+		}
+		
+		return output;
+	}
+
 }

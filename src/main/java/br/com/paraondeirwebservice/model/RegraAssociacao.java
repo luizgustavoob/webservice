@@ -1,34 +1,71 @@
 package br.com.paraondeirwebservice.model;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 public class RegraAssociacao {
 
-	private List<Integer> se;
-	private List<Integer> entao;
+	private final Set<String> setSe = new HashSet<>();
+	private final Set<String> setEntao = new HashSet<>();
+	private List<Integer> listSe;
+	private List<Integer> listEntao;
 	
-	public RegraAssociacao(){
+	public RegraAssociacao(Set<String> se, Set<String> entao){
+		this.setSe.addAll(se);
+        this.setEntao.addAll(entao);
+        this.listSe = new ArrayList<Integer>();
+        this.listEntao = new ArrayList<Integer>();
 	}
 	
-	public List<Integer> getSe() {
-		return se;
+	public Set<String> getHashSetSe() {
+		return Collections.<String>unmodifiableSet(setSe);
 	}
 	
-	public void setSe(List<Integer> se) {
-		this.se = se;
+	public Set<String> getHashSetEntao() {
+		return Collections.<String>unmodifiableSet(setEntao);
 	}
 	
-	public List<Integer> getEntao() {
-		return entao;
+	public List<Integer> getListSe() {
+		return listSe;
 	}
-	
-	public void setEntao(List<Integer> entao) {
-		this.entao = entao;
+
+	public List<Integer> getListEntao() {
+		return listEntao;
+	}
+
+	public void dadosHashToList(){
+		Iterator<String> itSe = setSe.iterator();
+		while (itSe.hasNext()){
+			listSe.add(Integer.parseInt(itSe.next()));
+		}
+		
+		Iterator<String> itEntao = setEntao.iterator();
+		while (itEntao.hasNext()){
+			listEntao.add(Integer.parseInt(itEntao.next()));
+		}
 	}
 	
 	@Override
-	public boolean equals(Object obj) {
-		// TODO Auto-generated method stub
-		return super.equals(obj);
+	public String toString() {
+		return "\"SE " + Arrays.toString(setSe.toArray()) + 
+				", ENTÃO " + Arrays.toString(setEntao.toArray()) + "\"";
 	}
+	
+    @Override
+    public boolean equals(Object obj) {
+        RegraAssociacao other = (RegraAssociacao) obj;
+
+        return setSe.equals(other.getHashSetSe()) &&
+               setEntao.equals(other.getHashSetEntao());
+    }
+    
+    @Override
+    public int hashCode() {
+        return setSe.hashCode() ^ setEntao.hashCode();
+    }
 }
