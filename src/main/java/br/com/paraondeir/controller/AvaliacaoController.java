@@ -1,4 +1,4 @@
-package br.com.paraondeirwebservice.controller;
+package br.com.paraondeir.controller;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.paraondeirwebservice.model.Avaliacao;
-import br.com.paraondeirwebservice.repository.IAvaliacaoDao;
+import br.com.paraondeir.model.Avaliacao;
+import br.com.paraondeir.repository.IAvaliacaoDao;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;

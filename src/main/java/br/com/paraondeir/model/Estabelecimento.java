@@ -1,4 +1,4 @@
-package br.com.paraondeirwebservice.model;
+package br.com.paraondeir.model;
 
 import java.io.Serializable;
 
@@ -42,9 +42,10 @@ public class Estabelecimento implements Serializable {
 	@Lob 
 	@Basic(fetch = FetchType.LAZY)
 	@Column(name = "imagem")
-	@Type(type="org.hibernate.type.PrimitiveByteArrayBlobType")
+	@Type(type="org.hibernate.type.WrappedMaterializedBlobType")
 	private byte[] imagem;
-
+	
+	
 	public int getIdEstabelecimento() {
 		return idEstabelecimento;
 	}

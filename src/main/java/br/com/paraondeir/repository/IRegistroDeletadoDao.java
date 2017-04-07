@@ -1,4 +1,4 @@
-package br.com.paraondeirwebservice.repository;
+package br.com.paraondeir.repository;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -7,8 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import br.com.paraondeirwebservice.model.RegistroDeletado;
-import br.com.paraondeirwebservice.model.RegistroDeletadoPK;
+import br.com.paraondeir.model.RegistroDeletado;
+import br.com.paraondeir.model.RegistroDeletadoPK;
 
 public interface IRegistroDeletadoDao extends JpaRepository<RegistroDeletado, RegistroDeletadoPK>{
 

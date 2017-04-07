@@ -1,4 +1,4 @@
-package br.com.paraondeirwebservice.controller;
+package br.com.paraondeir.controller;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,12 +15,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.paraondeirwebservice.model.Estabelecimento;
-import br.com.paraondeirwebservice.model.RegraAssociacao;
-import br.com.paraondeirwebservice.model.Usuario;
-import br.com.paraondeirwebservice.repository.IAvaliacaoDao;
-import br.com.paraondeirwebservice.repository.IEstabelecimentoDao;
-import br.com.paraondeirwebservice.utils.Constantes;
+import br.com.paraondeir.model.Estabelecimento;
+import br.com.paraondeir.model.RegraAssociacao;
+import br.com.paraondeir.model.Usuario;
+import br.com.paraondeir.repository.IAvaliacaoDao;
+import br.com.paraondeir.repository.IEstabelecimentoDao;
+import br.com.paraondeir.utils.Constantes;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;

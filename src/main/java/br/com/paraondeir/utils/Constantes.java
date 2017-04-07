@@ -1,4 +1,4 @@
-package br.com.paraondeirwebservice.utils;
+package br.com.paraondeir.utils;
 
 public interface Constantes {
 	

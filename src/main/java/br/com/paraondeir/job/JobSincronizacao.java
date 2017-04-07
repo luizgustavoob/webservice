@@ -1,4 +1,4 @@
-package br.com.paraondeirwebservice.job;
+package br.com.paraondeir.job;
 
 import java.util.List;
 
@@ -9,9 +9,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import br.com.paraondeirwebservice.controller.NotificacaoController;
-import br.com.paraondeirwebservice.model.Usuario;
-import br.com.paraondeirwebservice.repository.IUsuarioDao;
+import br.com.paraondeir.controller.NotificacaoController;
+import br.com.paraondeir.model.Usuario;
+import br.com.paraondeir.repository.IUsuarioDao;
 
 @Component
 @EnableScheduling	

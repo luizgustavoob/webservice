@@ -1,4 +1,4 @@
-package br.com.paraondeirwebservice.controller;
+package br.com.paraondeir.controller;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -10,8 +10,8 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import br.com.paraondeirwebservice.repository.IUsuarioDao;
-import br.com.paraondeirwebservice.utils.Constantes;
+import br.com.paraondeir.repository.IUsuarioDao;
+import br.com.paraondeir.utils.Constantes;
 
 @Controller
 public class NotificacaoController {

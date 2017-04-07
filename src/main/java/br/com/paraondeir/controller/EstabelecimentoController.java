@@ -1,4 +1,4 @@
-package br.com.paraondeirwebservice.controller;
+package br.com.paraondeir.controller;
 
 import java.util.List;
 
@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.paraondeirwebservice.model.Estabelecimento;
-import br.com.paraondeirwebservice.repository.IEstabelecimentoDao;
+import br.com.paraondeir.model.Estabelecimento;
+import br.com.paraondeir.repository.IEstabelecimentoDao;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;

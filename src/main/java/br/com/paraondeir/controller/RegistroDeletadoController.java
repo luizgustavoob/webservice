@@ -1,4 +1,4 @@
-package br.com.paraondeirwebservice.controller;
+package br.com.paraondeir.controller;
 
 import java.sql.Timestamp;
 import java.text.ParseException;
@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.paraondeirwebservice.model.RegistroDeletado;
-import br.com.paraondeirwebservice.repository.IRegistroDeletadoDao;
+import br.com.paraondeir.model.RegistroDeletado;
+import br.com.paraondeir.repository.IRegistroDeletadoDao;
 
 @RestController
 @RequestMapping(value = "/deletado")
