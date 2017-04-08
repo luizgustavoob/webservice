@@ -9,22 +9,20 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import br.com.paraondeir.controller.NotificacaoController;
 import br.com.paraondeir.model.Usuario;
 import br.com.paraondeir.repository.IUsuarioDao;
+import br.com.paraondeir.utils.NotificacaoUtils;
 
 @Component
 @EnableScheduling	
 public class JobSincronizacao {
 
 	@Autowired
-	private NotificacaoController controller;
-	@Autowired
 	private IUsuarioDao dao;
 	
 	private static final String TIME_ZONE = "America/Sao_Paulo";
 
-	@Scheduled(cron = "0 0 1 * * *", zone = TIME_ZONE) //Sempre 1 da manhã  
+	@Scheduled(cron = "0 0 21 * * *", zone = TIME_ZONE) //Sempre 1 da manhã  
 	public void notificarSincronizacao() throws Exception {
 		try {
 			JSONArray array = new JSONArray();
@@ -38,7 +36,7 @@ public class JobSincronizacao {
 			json.put("registration_ids", array);
 			json.put("data", data);		
 						
-			controller.notificar(json);
+			NotificacaoUtils.notificar(json);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

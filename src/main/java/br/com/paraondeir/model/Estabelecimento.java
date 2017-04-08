@@ -15,8 +15,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.Type;
-
 @Entity
 @Table(name = "estabelecimento")
 public class Estabelecimento implements Serializable {
@@ -42,9 +40,8 @@ public class Estabelecimento implements Serializable {
 	@Lob 
 	@Basic(fetch = FetchType.LAZY)
 	@Column(name = "imagem")
-	@Type(type="org.hibernate.type.WrappedMaterializedBlobType")
+	//@Type(type="org.hibernate.type.WrappedMaterializedBlobType")
 	private byte[] imagem;
-	
 	
 	public int getIdEstabelecimento() {
 		return idEstabelecimento;
