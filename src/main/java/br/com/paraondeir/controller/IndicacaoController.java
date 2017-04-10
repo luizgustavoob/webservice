@@ -50,8 +50,12 @@ public class IndicacaoController {
 		do {
 			List<int[]> auxiliar = calculaSuporte(itemsets, usuarios,
 					avaliacoes, avaliacoesPositivas);
-			itemsets.clear();
-			itemsets = atualizaItemset(auxiliar);
+			if (auxiliar.size() > 1){
+				itemsets.clear();
+				itemsets = atualizaItemset(auxiliar);
+			} else {
+				itemsets = auxiliar;
+			}
 		} while (itemsets.size() != 1);
 
 		boolean calculaConfianca = usuarioAvaliou(usuario.getUsuario(),
@@ -334,9 +338,11 @@ public class IndicacaoController {
 						novoArray[novoArray.length - 1] = tempJ[l];
 					}
 				}
+				
+				Arrays.sort(novoArray);
 
-				if (diferente == 1) {
-					addElemento(novoArray, novaLista);
+				if (diferente > 0) {					
+					addElemento(novoArray, novaLista);					
 				}
 			}
 		}
@@ -351,17 +357,21 @@ public class IndicacaoController {
 	 * @param listaProcura - lista atual.
 	 */
 	private void addElemento(int[] candidato, List<int[]> listaProcura) {
+		boolean achou = false;
 		if (listaProcura.size() > 0) {
 			for (int i = 0; i < listaProcura.size(); i++) {
 				int[] arrayBase = listaProcura.get(i);
-				if (!temNoArray(candidato, arrayBase)) {
-					Arrays.sort(candidato);
-					listaProcura.add(candidato);
+				if (temNoArray(candidato, arrayBase)) {
+					achou = true;
 					break;
 				}
 			}
 		} else {
-			Arrays.sort(candidato);
+			listaProcura.add(candidato);
+			return;
+		}
+		
+		if (!achou) {
 			listaProcura.add(candidato);
 		}
 	}
