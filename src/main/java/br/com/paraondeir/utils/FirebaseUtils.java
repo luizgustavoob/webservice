@@ -8,7 +8,7 @@ import java.net.URL;
 
 import org.json.JSONObject;
 
-public class NotificacaoUtils {
+public class FirebaseUtils {
 	
 	public static String notificar(JSONObject json) {
 		String retorno = "";
