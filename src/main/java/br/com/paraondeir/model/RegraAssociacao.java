@@ -58,10 +58,10 @@ public class RegraAssociacao {
 	
     @Override
     public boolean equals(Object obj) {
-        RegraAssociacao other = (RegraAssociacao) obj;
+        RegraAssociacao r = (RegraAssociacao) obj;
 
-        return setSe.equals(other.getHashSetSe()) &&
-               setEntao.equals(other.getHashSetEntao());
+        return setSe.equals(r.getHashSetSe()) &&
+               setEntao.equals(r.getHashSetEntao());
     }
     
     @Override
