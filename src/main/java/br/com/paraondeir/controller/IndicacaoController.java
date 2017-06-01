@@ -39,17 +39,16 @@ public class IndicacaoController {
 	public String solicitaIndicacao(@RequestBody String json)
 			throws JSONException {
 		
+		Usuario usuario = new Gson().fromJson(json, new TypeToken<Usuario>() {}.getType());		
 		List<Estabelecimento> retorno = new ArrayList<>();
-		Usuario usuario = new Gson().fromJson(json, new TypeToken<Usuario>() {}.getType());
 
 		List<String> usuarios = avaliacaoDao.findUsuariosAvaliacao();
-		List<HashMap<String, String>> avaliacoes = getAvaliacoes(usuarios, false);
-		List<HashMap<String, String>> avaliacoesPositivas = getAvaliacoes(usuarios, true);
+		List<HashMap<String, Integer[]>> avaliacoes = getAvaliacoes(usuarios, false);
+		List<HashMap<String, Integer[]>> avaliacoesPositivas = getAvaliacoes(usuarios, true);
 
-		List<int[]> itemsets = criaItemsetInicial();
+		List<Integer[]> itemsets = criaItemsetInicial();
 		do {
-			List<int[]> auxiliar = calculaSuporte(itemsets, usuarios,
-					avaliacoes, avaliacoesPositivas);
+			List<Integer[]> auxiliar = calculaSuporte(itemsets, usuarios, avaliacoes, avaliacoesPositivas);
 			if (auxiliar.size() > 1){
 				itemsets.clear();
 				itemsets = atualizaItemset(auxiliar);
@@ -58,14 +57,13 @@ public class IndicacaoController {
 			}
 		} while (itemsets.size() != 1);
 
-		boolean calculaConfianca = usuarioAvaliou(usuario.getUsuario(),
-				usuarios) ? true : false;
+		boolean calculaConfianca = usuarioAvaliou(usuario.getUsuario(), usuarios);
 
 		if (calculaConfianca) {
-			List<int[]> itemsetsConfianca = geraItemsetsConfianca(itemsets.get(0));
+			List<Integer[]> itemsetsConfianca = geraItemsetsConfianca(itemsets.get(0));
 			List<RegraAssociacao> regras = new ArrayList<>();
 			for (int i = 0; i < itemsetsConfianca.size(); i++) {
-				int[] itemset = itemsetsConfianca.get(i);
+				Integer[] itemset = itemsetsConfianca.get(i);
 				List<RegraAssociacao> regrasItemset = geraRegrasDeAssociacao(itemset);
 				for (RegraAssociacao regra : regrasItemset) {
 					regra.dadosHashToList();
@@ -76,7 +74,6 @@ public class IndicacaoController {
 				}
 			}
 
-			// Confirmar a efetividade desta parte do código.
 			for (int i = 0; i < regras.size(); i++) {
 				RegraAssociacao r = regras.get(i);
 				if (usuarioGostouDaCondicaoSe(usuario.getUsuario(), r.getListSe(), avaliacoesPositivas)) {
@@ -88,7 +85,7 @@ public class IndicacaoController {
 				}
 			}
 		} else {
-			for (int[] itemset : itemsets) {
+			for (Integer[] itemset : itemsets) {
 				for (int i = 0; i < itemset.length; i++) {
 					addElemento(estabDao.findOne(itemset[i]), retorno);
 				}
@@ -102,25 +99,17 @@ public class IndicacaoController {
 		return element.getAsJsonArray().toString();
 	}
 
-	/**
-	 * Verifica se os estabelecimentos presentes no parâmetro SE da regra foram
-	 * avaliados positivamente pelo usuário da solicitação.
-	 * 
-	 * @param usuario - usuário da solicitação.
-	 * @param se - estabelecimentos do parâmetro SE da regra.
-	 * @param avaliacoesPositivas - lista de avaliações positivas.
-	 * @return true or false.
-	 */
-	private boolean usuarioGostouDaCondicaoSe(String usuario, List<Integer> se,
-			List<HashMap<String, String>> avaliacoesPositivas) {
+	private boolean usuarioGostouDaCondicaoSe(String usuario, 
+			List<Integer> paramSe,
+			List<HashMap<String, Integer[]>> avaliacoesPositivas) {
+		
 		int count = 0;
 		for (int i = 0; i < avaliacoesPositivas.size(); i++) {
-			String avaliacoes = avaliacoesPositivas.get(i).get(usuario);
-			if (avaliacoes != null) {
-				String[] estabs = avaliacoes.split(",");
-				for (int j = 0; j < se.size(); j++) {
-					for (int k = 0; k < estabs.length; k++) {
-						if (se.get(j) == Integer.parseInt(estabs[k])) {
+			Integer[] estabelecimentosAvaliados = avaliacoesPositivas.get(i).get(usuario);
+			if (estabelecimentosAvaliados != null) {
+				for (int j = 0; j < paramSe.size(); j++) {
+					for (int k = 0; k < estabelecimentosAvaliados.length; k++) {
+						if (paramSe.get(j) == estabelecimentosAvaliados[k]) {
 							count++;
 						}
 					}
@@ -129,52 +118,31 @@ public class IndicacaoController {
 			}
 		}
 
-		return count == se.size() ? true : false;
+		return count == paramSe.size();
 	}
 
-	/**
-	 * Aplicar o cálculo da confiança.
-	 * 
-	 * @param regra - regra que sofrerá o cálculo.
-	 * @param usuarios - usuários que realizaram avaliações.
-	 * @param avaliacoesPositivas - lista com as avaliações.
-	 * @return valor da confiança.
-	 */
 	private double calculaConfianca(RegraAssociacao regra,
 			List<String> usuarios,
-			List<HashMap<String, String>> avaliacoesPositivas) {
+			List<HashMap<String, Integer[]>> avaliacoesPositivas) {
 
 		List<Integer> listItemset = new ArrayList<>();
-		List<Integer> listSe = new ArrayList<>();
+		List<Integer> listParamSe = new ArrayList<>();
 		for (int i = 0; i < regra.getListSe().size(); i++) {
 			addElemento(regra.getListSe().get(i), listItemset);
-			addElemento(regra.getListSe().get(i), listSe);
+			addElemento(regra.getListSe().get(i), listParamSe);
 		}
 		for (int i = 0; i < regra.getListEntao().size(); i++) {
 			addElemento(regra.getListEntao().get(i), listItemset);
 		}
 
-		int[] itemset = new int[listItemset.size()];
-		int[] se = new int[listSe.size()];
-		for (int i = 0; i < listItemset.size(); i++) {
-			itemset[i] = listItemset.get(i);
-		}
-		for (int i = 0; i < listSe.size(); i++) {
-			se[i] = listSe.get(i);
-		}
+		Integer[] itemset = listItemset.toArray(new Integer[listItemset.size()]);
+		Integer[] paramSe = listParamSe.toArray(new Integer[listParamSe.size()]);
 
 		double total = contarAvaliacoes(itemset, usuarios, avaliacoesPositivas);
-		double totalSe = contarAvaliacoes(se, usuarios, avaliacoesPositivas);
+		double totalSe = contarAvaliacoes(paramSe, usuarios, avaliacoesPositivas);
 		return total / totalSe;
 	}
 
-	/**
-	 * Verifica se determinado usuário já realizou alguma avaliação.
-	 * 
-	 * @param usuario - usuário da solicitação.
-	 * @param usuarios - lista de usuários que já realizaram avaliações.
-	 * @return true or false
-	 */
 	private boolean usuarioAvaliou(String usuario, List<String> usuarios) {
 		boolean retorno = false;
 		for (int i = 0; i < usuarios.size(); i++) {
@@ -186,40 +154,26 @@ public class IndicacaoController {
 		return retorno;
 	}
 
-	/**
-	 * Cria o itemset com elementos de tamanho 1.
-	 * 
-	 * @return lista com itemsets de tamanho 1.
-	 */
-	private List<int[]> criaItemsetInicial() {
-		List<int[]> retorno = new ArrayList<>();
+	private List<Integer[]> criaItemsetInicial() {
+		List<Integer[]> retorno = new ArrayList<>();
 		for (Estabelecimento estab : estabDao.findAll()) {
-			int[] id = { estab.getIdEstabelecimento() };
-			retorno.add(id);
+			Integer[] itemset = { estab.getIdEstabelecimento() };
+			retorno.add(itemset);
 		}
 		return retorno;
 	}
 
-	/**
-	 * Aplica a fórmula do suporte.
-	 * 
-	 * @param itemsets - lista com os itemsets atualizados.
-	 * @param usuarios - utilizados como transações.
-	 * @param avaliacoes - todas as avaliações de cada usuário.
-	 * @param avaliacoesPositivas - todas as avaliações positivas de cada usuário.
-	 * @return lista com os itemsets cujo valor de suporte é maior que o mínimo proposto.
-	 */
-	private List<int[]> calculaSuporte(List<int[]> itemsets,
-			List<String> usuarios, List<HashMap<String, String>> avaliacoes,
-			List<HashMap<String, String>> avaliacoesPositivas) {
+	private List<Integer[]> calculaSuporte(List<Integer[]> itemsets,
+			List<String> usuarios, 
+			List<HashMap<String, Integer[]>> avaliacoes,
+			List<HashMap<String, Integer[]>> avaliacoesPositivas) {
 
-		List<int[]> retorno = new ArrayList<>();
+		List<Integer[]> retorno = new ArrayList<>();
 
 		for (int i = 0; i < itemsets.size(); i++) {
-			int[] itemset = itemsets.get(i);
+			Integer[] itemset = itemsets.get(i);
 			double total = contarAvaliacoes(itemset, usuarios, avaliacoes);
-			double totalSim = contarAvaliacoes(itemset, usuarios,
-					avaliacoesPositivas);
+			double totalSim = contarAvaliacoes(itemset, usuarios, avaliacoesPositivas);
 			double resultado = totalSim / total;
 
 			if (resultado >= Constantes.SUPORTE_MINIMO) {
@@ -230,61 +184,37 @@ public class IndicacaoController {
 		return retorno;
 	}
 
-	/**
-	 * Retorna todas as avaliações realizadas pelos usuários.
-	 * 
-	 * @param usuarios - usuários que realizaram avaliações.
-	 * @param filtraParamGostou - Indica se a consulta deve considerar o preenchimento do 
-	 * campo "Gostou".
-	 * @return lista com as avaliações realizadas, separadas por usuário.
-	 */
-	private List<HashMap<String, String>> getAvaliacoes(List<String> usuarios,
+	private List<HashMap<String, Integer[]>> getAvaliacoes(List<String> usuarios,
 			boolean filtraParamGostou) {
-		List<HashMap<String, String>> retorno = new ArrayList<>();
+		List<HashMap<String, Integer[]>> retorno = new ArrayList<>();
 
 		for (String usuario : usuarios) {
 			List<Integer> estabelecimentos = filtraParamGostou ? 
 					avaliacaoDao.findEstabsByUsuarioAndGostou(usuario, "S") : 
 					avaliacaoDao.findEstabsByUsuario(usuario);
-
-			StringBuilder sb = new StringBuilder();
-			for (Integer estab : estabelecimentos) {
-				sb.append(estab);
-				sb.append(",");
-			}
-			HashMap<String, String> hash = new HashMap<String, String>();
-			String ids = sb.toString();
-			hash.put(usuario, ids.substring(0, ids.length() - 1));
+			
+			HashMap<String, Integer[]> hash = new HashMap<String, Integer[]>();
+			hash.put(usuario, estabelecimentos.toArray(new Integer[estabelecimentos.size()]));
 			retorno.add(hash);
 		}
 
 		return retorno;
 	}
 
-	/**
-	 * Contar as avaliações de um determinado grupo de estabelecimentos
-	 * (itemsets).
-	 * 
-	 * @param itemset - estabelecimentos avaliados.
-	 * @param usuarios - usuários que realizaram avaliações.
-	 * @param avaliacoes - lista de avaliações para contagem.
-	 * @return total de avaliações realizadas sobre os estabelecimentos passados 
-	 * por parâmetro.
-	 */
-	private int contarAvaliacoes(int[] itemset, List<String> usuarios,
-			List<HashMap<String, String>> avaliacoes) {
+	private int contarAvaliacoes(Integer[] itemset, 
+			List<String> usuarios,
+			List<HashMap<String, Integer[]>> avaliacoes) {
 		int countRetorno = 0;
 		int countAuxiliar = 0;
 
 		for (String usuario : usuarios) {
 			for (int i = 0; i < avaliacoes.size(); i++) {
 				countAuxiliar = 0;
-				String avaliacao = avaliacoes.get(i).get(usuario);
-				if (avaliacao != null) {
-					String[] estabelecimentos = avaliacao.split(",");
+				Integer[] estabelecimentosAvaliados = avaliacoes.get(i).get(usuario);
+				if (estabelecimentosAvaliados != null) {
 					for (int j = 0; j < itemset.length; j++) {
-						for (int k = 0; k < estabelecimentos.length; k++) {
-							if (itemset[j] == Integer.parseInt(estabelecimentos[k])) {
+						for (int k = 0; k < estabelecimentosAvaliados.length; k++) {
+							if (itemset[j] == estabelecimentosAvaliados[k]) {
 								countAuxiliar++;
 							}
 						}
@@ -301,33 +231,25 @@ public class IndicacaoController {
 		return countRetorno;
 	}
 
-	/**
-	 * Atualiza a lista de itemsets usadas no cálculo do suporte, incremento o
-	 * tamanho do seus elementos em 1.
-	 * 
-	 * @param itemsets - lista atual dos itemsets.
-	 * @return lista de itemsets com seus elementos com tamanho n+1.
-	 */
-	private List<int[]> atualizaItemset(List<int[]> itemsets) {
-		Integer tamanhoAtualItemset = itemsets.get(0).length;
-		List<int[]> novaLista = new ArrayList<>();
+	private List<Integer[]> atualizaItemset(List<Integer[]> itemsets) {
+		Integer tamanhoAtual = itemsets.get(0).length;
+		List<Integer[]> novaLista = new ArrayList<>();
 
 		for (int i = 0; i < itemsets.size(); i++) {
-
 			for (int j = i + 1; j < itemsets.size(); j++) {
-				int[] tempI = itemsets.get(i);
-				int[] tempJ = itemsets.get(j);
-				int[] novoArray = new int[tamanhoAtualItemset + 1];
+				Integer[] itemsetLoopI = itemsets.get(i);
+				Integer[] itemsetLoopJ = itemsets.get(j);
+				Integer[] novoItemset = new Integer[tamanhoAtual + 1];
 
-				for (int k = 0; k < novoArray.length - 1; k++) {
-					novoArray[k] = tempI[k];
+				for (int k = 0; k < novoItemset.length - 1; k++) {
+					novoItemset[k] = itemsetLoopI[k];
 				}
 
 				int diferente = 0;
-				for (int l = 0; l < tempJ.length; l++) {
+				for (int l = 0; l < itemsetLoopJ.length; l++) {
 					boolean encontrou = false;
-					for (int m = 0; m < tempI.length; m++) {
-						if (tempI[m] == tempJ[l]) {
+					for (int m = 0; m < itemsetLoopI.length; m++) {
+						if (itemsetLoopI[m] == itemsetLoopJ[l]) {
 							encontrou = true;
 							break;
 						}
@@ -335,14 +257,14 @@ public class IndicacaoController {
 
 					if (!encontrou) {
 						diferente++;
-						novoArray[novoArray.length - 1] = tempJ[l];
+						novoItemset[novoItemset.length - 1] = itemsetLoopJ[l];
 					}
 				}
 				
-				Arrays.sort(novoArray);
+				Arrays.sort(novoItemset);
 
 				if (diferente > 0) {					
-					addElemento(novoArray, novaLista);					
+					addElemento(novoItemset, novaLista);					
 				}
 			}
 		}
@@ -350,38 +272,25 @@ public class IndicacaoController {
 		return novaLista;
 	}
 
-	/**
-	 * Verifica e adiciona determinado itemset a lista.
-	 * 
-	 * @param candidato - array candidato.
-	 * @param listaProcura - lista atual.
-	 */
-	private void addElemento(int[] candidato, List<int[]> listaProcura) {
+	private void addElemento(Integer[] candidato, List<Integer[]> listaProcura) {
 		boolean achou = false;
 		if (listaProcura.size() > 0) {
 			for (int i = 0; i < listaProcura.size(); i++) {
-				int[] arrayBase = listaProcura.get(i);
+				Integer[] arrayBase = listaProcura.get(i);
 				if (temNoArray(candidato, arrayBase)) {
 					achou = true;
 					break;
 				}
 			}
+			
+			if (!achou) {
+				listaProcura.add(candidato);
+			}
 		} else {
-			listaProcura.add(candidato);
-			return;
-		}
-		
-		if (!achou) {
 			listaProcura.add(candidato);
 		}
 	}
 
-	/**
-	 * Verifica e adiciona determinado elemento a lista.
-	 * 
-	 * @param candidato - elemento candidato.
-	 * @param listaProcura - lista atual.
-	 */
 	private void addElemento(int candidato, List<Integer> listaProcura) {
 		boolean achou = false;
 		if (listaProcura.size() > 0) {
@@ -401,14 +310,7 @@ public class IndicacaoController {
 		}
 	}
 
-	/**
-	 * Verifica e adiciona determinado estabelecimento a lista.
-	 * 
-	 * @param candidato - estabelecimento candidato.
-	 * @param listaProcura - lista atual.
-	 */
-	private void addElemento(Estabelecimento candidato,
-			List<Estabelecimento> listaProcura) {
+	private void addElemento(Estabelecimento candidato, List<Estabelecimento> listaProcura) {
 		boolean achou = false;
 		if (listaProcura.size() > 0) {
 			for (int i = 0; i < listaProcura.size(); i++) {
@@ -427,15 +329,7 @@ public class IndicacaoController {
 		}
 	}
 
-	/**
-	 * Verifica se determinados elementos já fazem parte de um determinado
-	 * array.
-	 * 
-	 * @param elementos - estabelecimentos candidatos.
-	 * @param arrayProcura - array base para verificação dos elementos.
-	 * @return elementos existem ou não no array.
-	 */
-	private boolean temNoArray(int[] elementos, int[] arrayProcura) {
+	private boolean temNoArray(Integer[] elementos, Integer[] arrayProcura) {
 		int contador = 0;
 		for (int i = 0; i < arrayProcura.length; i++) {
 			for (int k = 0; k < elementos.length; k++) {
@@ -446,41 +340,31 @@ public class IndicacaoController {
 			}
 		}
 
-		return contador == elementos.length ? true : false;
+		return contador == elementos.length;
 	}
 
-	/**
-	 * Divide um determinado array de estabelecimentos em grupos menores, sendo
-	 * o tamanho mínimo 2.
-	 * 
-	 * @param itemset - array a dividir.
-	 * @return lista dos arrays gerados.
-	 */
-	private List<int[]> geraItemsetsConfianca(int[] itemset) {
-		List<int[]> retorno = new ArrayList<int[]>();
+	private List<Integer[]> geraItemsetsConfianca(Integer[] itemset) {
+		List<Integer[]> retorno = new ArrayList<Integer[]>();
 		int controle = itemset.length;
-		int[] bit = new int[controle];
-		int qtdeItemSets = (int) (Math.pow(2, controle) - 1);
+		int[] arrayBit = new int[controle];
+		int qtdeItemsets = (int) (Math.pow(2, controle) - 1);
 
 		for (int i = 0; i < controle; i++) {
-			bit[i] = 0;
+			arrayBit[i] = 0;
 		}
 
-		for (int j = 1; j <= qtdeItemSets; j++) {
-			List<Integer> listIds = new ArrayList<>();
-			somaBit(bit, controle);
+		for (int j = 1; j <= qtdeItemsets; j++) {
+			List<Integer> listaIds = new ArrayList<>();
+			atualizaBit(arrayBit, controle);
 
 			for (int k = 0; k < controle; k++) {
-				if (bit[k] == 1) {
-					listIds.add(itemset[k]);
+				if (arrayBit[k] == 1) {
+					listaIds.add(itemset[k]);
 				}
 			}
 
-			if (listIds.size() > 1) {
-				int[] ids = new int[listIds.size()];
-				for (int l = 0; l < listIds.size(); l++) {
-					ids[l] = listIds.get(l);
-				}
+			if (listaIds.size() > 1) {
+				Integer[] ids = listaIds.toArray(new Integer[listaIds.size()]);
 				addElemento(ids, retorno);
 			}
 		}
@@ -488,14 +372,7 @@ public class IndicacaoController {
 		return retorno;
 	}
 
-	/**
-	 * Função auxiliar utilizada na divisão de um itemset em arrays menores.
-	 * 
-	 * @see geraItemsetsConfianca
-	 * @param arrayBits
-	 * @param tamanho
-	 */
-	private void somaBit(int arrayBits[], int tamanho) {
+	private void atualizaBit(int[] arrayBits, int tamanho) {
 		for (int i = 0; i < tamanho; i++) {
 			if (arrayBits[i] == 0) {
 				arrayBits[i] = 1;
@@ -510,16 +387,11 @@ public class IndicacaoController {
 	 * @param itemset - itemset com os elementos para geração das regras.
 	 * @return lista das regras.
 	 */
-	private List<RegraAssociacao> geraRegrasDeAssociacao(int[] itemset) {
+	private List<RegraAssociacao> geraRegrasDeAssociacao(Integer[] itemset) {
 		if (itemset.length >= 2) {
 			List<RegraAssociacao> regras = new ArrayList<>();
-			String[] strItemset = new String[itemset.length];
-			for (int i = 0; i < itemset.length; i++) {
-				strItemset[i] = itemset[i] + "";
-			}
-
 			Set<RegraAssociacao> setResultado = new HashSet<>();
-			Set<String> set = new HashSet<>(Arrays.asList(strItemset));
+			Set<Integer> set = new HashSet<>(Arrays.asList(itemset));
 			Set<RegraAssociacao> setRegras = geraRegrasDeAssociacao(set);
 			geraRegrasDeAssociacao(set, setRegras, setResultado);
 
@@ -537,11 +409,11 @@ public class IndicacaoController {
 	 * @param itemset - itemset com os elementos para geração das regras.
 	 * @return set das regras.
 	 */
-	private Set<RegraAssociacao> geraRegrasDeAssociacao(Set<String> itemset) {
+	private Set<RegraAssociacao> geraRegrasDeAssociacao(Set<Integer> itemset) {
 		Set<RegraAssociacao> retorno = new HashSet<>(itemset.size());
-		Set<String> se = new HashSet<>(itemset);
-		Set<String> entao = new HashSet<>(1);
-		for (String elemento : itemset) {
+		Set<Integer> se = new HashSet<>(itemset);
+		Set<Integer> entao = new HashSet<>(1);
+		for (Integer elemento : itemset) {
 			se.remove(elemento);
 			entao.add(elemento);
 			retorno.add(new RegraAssociacao(se, entao));
@@ -557,8 +429,9 @@ public class IndicacaoController {
 	 * @param setRegras
 	 * @param setResultado
 	 */
-	private void geraRegrasDeAssociacao(Set<String> itemset,
-			Set<RegraAssociacao> setRegras, Set<RegraAssociacao> setResultado) {
+	private void geraRegrasDeAssociacao(Set<Integer> itemset,
+			Set<RegraAssociacao> setRegras, 
+			Set<RegraAssociacao> setResultado) {
 		
 		Iterator<RegraAssociacao> it = setRegras.iterator();
 		while (it.hasNext()) {
@@ -587,8 +460,8 @@ public class IndicacaoController {
 	private Set<RegraAssociacao> moveUmElementoPraCondicaoEntao(
 			Set<RegraAssociacao> setRegras) {
 		Set<RegraAssociacao> output = new HashSet<>();
-		Set<String> se = new HashSet<>();
-		Set<String> entao = new HashSet<>();
+		Set<Integer> se = new HashSet<>();
+		Set<Integer> entao = new HashSet<>();
 
 		for (RegraAssociacao regra : setRegras) {
 			se.clear();
@@ -596,7 +469,7 @@ public class IndicacaoController {
 			se.addAll(regra.getHashSetSe());
 			entao.addAll(regra.getHashSetEntao());
 
-			for (String elemento : regra.getHashSetSe()) {
+			for (Integer elemento : regra.getHashSetSe()) {
 				se.remove(elemento);
 				entao.add(elemento);
 				RegraAssociacao novaRegra = new RegraAssociacao(se, entao);

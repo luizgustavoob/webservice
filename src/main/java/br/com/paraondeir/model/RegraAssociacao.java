@@ -10,24 +10,24 @@ import java.util.Set;
 
 public class RegraAssociacao {
 
-	private final Set<String> setSe = new HashSet<>();
-	private final Set<String> setEntao = new HashSet<>();
+	private final Set<Integer> setSe = new HashSet<>();
+	private final Set<Integer> setEntao = new HashSet<>();
 	private List<Integer> listSe;
 	private List<Integer> listEntao;
 	
-	public RegraAssociacao(Set<String> se, Set<String> entao){
+	public RegraAssociacao(Set<Integer> se, Set<Integer> entao){
 		this.setSe.addAll(se);
         this.setEntao.addAll(entao);
         this.listSe = new ArrayList<Integer>();
         this.listEntao = new ArrayList<Integer>();
 	}
 	
-	public Set<String> getHashSetSe() {
-		return Collections.<String>unmodifiableSet(setSe);
+	public Set<Integer> getHashSetSe() {
+		return Collections.<Integer>unmodifiableSet(setSe);
 	}
 	
-	public Set<String> getHashSetEntao() {
-		return Collections.<String>unmodifiableSet(setEntao);
+	public Set<Integer> getHashSetEntao() {
+		return Collections.<Integer>unmodifiableSet(setEntao);
 	}
 	
 	public List<Integer> getListSe() {
@@ -39,14 +39,14 @@ public class RegraAssociacao {
 	}
 
 	public void dadosHashToList(){
-		Iterator<String> itSe = setSe.iterator();
+		Iterator<Integer> itSe = setSe.iterator();
 		while (itSe.hasNext()){
-			listSe.add(Integer.parseInt(itSe.next()));
+			listSe.add(itSe.next());
 		}
 		
-		Iterator<String> itEntao = setEntao.iterator();
+		Iterator<Integer> itEntao = setEntao.iterator();
 		while (itEntao.hasNext()){
-			listEntao.add(Integer.parseInt(itEntao.next()));
+			listEntao.add(itEntao.next());
 		}
 	}
 	
